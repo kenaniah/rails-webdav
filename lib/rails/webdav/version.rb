@@ -1,5 +1,7 @@
+require "rails/webdav/controller"
+
 module Rails
-	module Webdav
+	module WebDAV
 		VERSION = "0.0.0"
 	end
 end

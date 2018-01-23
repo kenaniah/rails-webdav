@@ -4,7 +4,7 @@ require "rails/webdav/version"
 
 Gem::Specification.new do |gem|
 	gem.name = "rails-webdav"
-	gem.version = Rails::Webdav::VERSION
+	gem.version = Rails::WebDAV::VERSION
 	gem.authors = ["Kenaniah Cerny"]
 	gem.email = ["kenaniah@gmail.com"]
 
