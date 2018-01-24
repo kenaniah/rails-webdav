@@ -9,8 +9,6 @@ module Rails
 
 			module InstanceMethods
 
-				include Rack::HTTP::Status
-
 				# Defines PROPFIND method
 				def propfind
 
@@ -28,7 +26,7 @@ module Rails
 					nodes.each do |n|
 
 						# Don't allow empty namespace declarations
-						raise BadRequest if n.namespace.nil? && n.namespace_definitions.empty?
+						raise ::Rack::HTTP::Status::BadRequest if n.namespace.nil? && n.namespace_definitions.empty?
 
 						# Set a blank namespace if one is included in the request
 						# <propfind xmlns="DAV:"><prop><nonamespace xmlns=""/></prop></propfind>
@@ -66,7 +64,7 @@ module Rails
 				def handle_request
 					begin
 						self.send request.request_method.downcase
-					rescue Status => status
+					rescue ::Rack::HTTP::Status::Status => status
 						response.status = status.to_i
 					end
 				end
@@ -117,7 +115,7 @@ module Rails
 							yield xml
 						end
 					end
-					response.status = MultiStatus
+					response.status = ::Rack::HTTP::Status::MultiStatus
 				end
 
 				# Appends XML status codes
@@ -151,8 +149,8 @@ module Rails
 					stats = Hash.new { |h, k| h[k] = [] }
 					nodes.each do |node|
 						begin
-							stats[OK] << [node, resource.get_property(qualified_property_name(node))]
-						rescue Status
+							stats[::Rack::HTTP::Status::OK] << [node, resource.get_property(qualified_property_name(node))]
+						rescue ::Rack::HTTP::Status::Status
 							stats[$!] << node
 						end
 					end
