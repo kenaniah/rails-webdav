@@ -1,3 +1,4 @@
+require "rack/http/status"
 require "rails/webdav/controller"
 require "rails/webdav/version"
 

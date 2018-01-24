@@ -1,5 +1,3 @@
-require "rack/http/status"
-
 module Rails
 	module WebDAV
 		module Controller
