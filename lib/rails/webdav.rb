@@ -1,6 +1,4 @@
-require "rack/http/status"
 require "rails/webdav/controller"
-require "rails/webdav/http_status"
 require "rails/webdav/version"
 
 module Rails
@@ -15,7 +13,6 @@ module Rails
 				extend Controller::ClassMethods
 
 				# Adds HTTP status handling
-				include Rails::WebDAV::HTTPStatus
 				around_action :handle_request
 
 			end

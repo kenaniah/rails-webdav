@@ -1,3 +1,5 @@
+require "rack/http/status"
+
 module Rails
 	module WebDAV
 		module Controller
@@ -6,6 +8,8 @@ module Rails
 			end
 
 			module InstanceMethods
+
+				include Rack::HTTP::Status
 
 				# Defines PROPFIND method
 				def propfind
@@ -24,7 +28,7 @@ module Rails
 					nodes.each do |n|
 
 						# Don't allow empty namespace declarations
-						raise Rack::HTTP::Status::BadRequest if n.namespace.nil? && n.namespace_definitions.empty?
+						raise BadRequest if n.namespace.nil? && n.namespace_definitions.empty?
 
 						# Set a blank namespace if one is included in the request
 						# <propfind xmlns="DAV:"><prop><nonamespace xmlns=""/></prop></propfind>
@@ -62,7 +66,7 @@ module Rails
 				def handle_request
 					begin
 						self.send request.request_method.downcase
-					rescue Rack::HTTP::Status::Status => status
+					rescue Status => status
 						response.status = status.to_i
 					end
 				end
@@ -113,7 +117,7 @@ module Rails
 							yield xml
 						end
 					end
-					response.status = Rack::HTTP::Status::MultiStatus
+					response.status = MultiStatus
 				end
 
 				# Appends XML status codes
@@ -121,11 +125,11 @@ module Rails
 					return if stats.empty?
 					stats.each do |status, props|
 						xml.propstat do
-							xml.status "HTTP/1.1 #{status.status_line}"
+							xml.status "HTTP/1.1 #{status}"
 							xml.prop do
 								props.each do |node, value|
 									if value.is_a? Nokogiri::XML::Node
-										xml['DAV'].send qualified_node_name(node).to_sym do
+										xml.send qualified_node_name(node).to_sym do
 											rexml_convert xml, value
 										end
 									else
@@ -133,11 +137,9 @@ module Rails
 										unless node.namespace.nil?
 											unless node.namespace.prefix.nil?
 												attrs = { "xmlns:#{node.namespace.prefix}" => node.namespace.href }
-											else
-												attrs = { 'xmlns' => node.namespace.href }
 											end
 										end
-										xml['DAV'].send qualified_node_name(node).to_sym, value, attrs
+										xml.send qualified_node_name(node).to_sym, value, attrs
 									end
 								end
 							end
@@ -149,8 +151,8 @@ module Rails
 					stats = Hash.new { |h, k| h[k] = [] }
 					nodes.each do |node|
 						begin
-							stats[Rack::HTTP::Status::OK] << [node, resource.get_property(qualified_property_name(node))]
-						rescue Rack::HTTP::Status::Status
+							stats[OK] << [node, resource.get_property(qualified_property_name(node))]
+						rescue Status
 							stats[$!] << node
 						end
 					end
@@ -158,8 +160,7 @@ module Rails
 				end
 
 				def qualified_node_name(node)
-					"DAV:#{node.name}"
-					#node.namespace.nil? || node.namespace.prefix.nil? ? node.name : "#{node.namespace.prefix}:#{node.name}"
+					node.namespace.nil? || node.namespace.prefix.nil? ? "DAV:#{node.name}" : "#{node.namespace.prefix}:#{node.name}"
 				end
 
 				def qualified_property_name node
