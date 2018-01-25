@@ -16,6 +16,11 @@ module Rails
 								match "", action: :webdav, via: m
 							end
 						end
+						member do
+							[:propfind, :options, :head, :get].each do |m|
+								match "", action: :webdav, via: m
+							end
+						end
 					end
 				end
 			end

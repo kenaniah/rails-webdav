@@ -34,7 +34,6 @@ module Rails
 					content = Nokogiri::XML::Builder.new encoding: "UTF-8" do |xml|
 						yield xml
 					end.to_xml
-					puts content.cyan
 					response.body = [content]
 					response["Content-Type"] = 'text/xml; charset=utf-8'
 					response["Content-Length"] = content.bytesize.to_s

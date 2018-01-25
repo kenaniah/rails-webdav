@@ -5,17 +5,18 @@ module Rails
 
 				# Defines a request handler
 				def webdav
+					request.headers.select{ |k, v| k.starts_with? "HTTP_" }.each { |k, v| puts "#{k} - #{v}".light_blue }
+					puts request.body.read.light_blue
 					begin
 						self.send :"webdav_#{request.request_method.downcase}"
 					rescue ::Rack::HTTP::Status::Status => status
 						response.status = status.to_i
 					end
+					puts response.body.cyan
 				end
 
 				# Defines the PROPFIND method
 				def webdav_propfind
-
-					puts request.body.read.green
 
 					# Determine what properties to return
 					nodes = nil
