@@ -2,70 +2,21 @@ module Rails
 	module WebDAV
 		module Controller
 
-			module ClassMethods
-			end
+			# module ClassMethods
+			# end
 
 			module InstanceMethods
 
-				# Defines PROPFIND method
-				def propfind
-
-					puts request.body.read.green
-
-					# Determine what nodes to return
-					if request_match("/d:propfind/d:allprop").empty?
-						nodes = request_match "/d:propfind/d:prop/*"
-						nodes = all_prop_nodes if nodes.empty?
-					else
-						nodes = all_prop_nodes
-					end
-
-					# Iterate the nodes
-					nodes.each do |n|
-
-						# Don't allow empty namespace declarations
-						raise ::Rack::HTTP::Status::BadRequest if n.namespace.nil? && n.namespace_definitions.empty?
-
-						# Set a blank namespace if one is included in the request
-						# <propfind xmlns="DAV:"><prop><nonamespace xmlns=""/></prop></propfind>
-						if n.namespace.nil?
-							nd = n.namespace_definitions.first
-							if nd.prefix.nil? && nd.href.empty?
-								n.add_namespace(nil, '')
-							end
-						end
-
-					end
-
-					# Return a collection
-					multistatus do |xml|
-						self.index.each do |name, resource|
-							xml['DAV'].response do
-								xml['DAV'].href resource.path
-								propstats xml, get_properties(resource, nodes)
-							end
-						end
-					end
-
-				end
-
-				# Defines OPTIONS method
-				def options
-					response["Allow"] = 'OPTIONS,HEAD,GET,PUT,POST,DELETE,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE'
-					response["Dav"] = "1"
-					response["Ms-Author-Via"] = "DAV"
-				end
-
-			protected
-
 				# Defines a request handler
-				def handle_request
+				def webdav
 					begin
-						self.send request.request_method.downcase
+						self.send :"webdav_#{request.request_method.downcase}"
 					rescue ::Rack::HTTP::Status::Status => status
 						response.status = status.to_i
 					end
 				end
+
+			protected
 
 				# Returns an instance of the XML document
 				def request_document
@@ -125,7 +76,7 @@ module Rails
 							xml.prop do
 								props.each do |node, value|
 									if value.is_a? Nokogiri::XML::Node
-										xml.send qualified_node_name(node).to_sym do
+										xml.send _xml_qualified_node_name(node).to_sym do
 											rexml_convert xml, value
 										end
 									else
@@ -135,7 +86,7 @@ module Rails
 												attrs = { "xmlns:#{node.namespace.prefix}" => node.namespace.href }
 											end
 										end
-										xml.send qualified_node_name(node).to_sym, value, attrs
+										xml.send _xml_qualified_node_name(node).to_sym, value, attrs
 									end
 								end
 							end
@@ -147,20 +98,12 @@ module Rails
 					stats = Hash.new { |h, k| h[k] = [] }
 					nodes.each do |node|
 						begin
-							stats[::Rack::HTTP::Status::OK] << [node, resource.get_property(qualified_property_name(node))]
+							stats[::Rack::HTTP::Status::OK] << [node, resource.get_property(_xml_qualified_property_name(node))]
 						rescue ::Rack::HTTP::Status::Status
 							stats[$!] << node
 						end
 					end
 					stats
-				end
-
-				def qualified_node_name(node)
-					node.namespace.nil? || node.namespace.prefix.nil? ? "DAV:#{node.name}" : "#{node.namespace.prefix}:#{node.name}"
-				end
-
-				def qualified_property_name node
-					node.namespace.nil? || node.namespace.href == 'DAV:' ? node.name : "{#{node.namespace.href}}#{node.name}"
 				end
 
 				def rexml_convert xml, element
