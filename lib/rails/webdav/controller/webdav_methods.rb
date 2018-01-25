@@ -17,13 +17,12 @@ module Rails
 
 					puts request.body.read.green
 
-					# Determine what nodes to return
+					# Determine what properties to return
+					nodes = nil
 					if _xml_request_match("/d:propfind/d:allprop").empty?
 						nodes = _xml_request_match "/d:propfind/d:prop/*"
-						nodes = all_prop_nodes if nodes.empty?
-					else
-						nodes = all_prop_nodes
 					end
+					nodes = all_prop_nodes if nodes.empty?
 
 					# Iterate the nodes
 					nodes.each do |n|

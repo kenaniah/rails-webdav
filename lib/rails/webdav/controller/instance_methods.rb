@@ -5,19 +5,10 @@ module Rails
 
 			protected
 
-				# Returns an instance of the XML document
-				def request_document
-					@request_document ||= if (body = request.body.read).empty?
-						Nokogiri::XML::Document.new
-					else
-						Nokogiri::XML body, &:strict
-					end
-				end
-
 				# Returns a list of all property nodes
 				def all_prop_nodes
 					property_names.map do |n|
-						node = Nokogiri::XML::Element.new n, request_document
+						node = Nokogiri::XML::Element.new n, _xml_request_document
 						node.add_namespace nil, 'DAV:'
 						node
 					end
@@ -28,20 +19,9 @@ module Rails
 					%w(creationdate displayname getlastmodified getetag resourcetype getcontenttype getcontentlength)
 				end
 
-				# Generates an XML response
-				def render_xml
-					content = Nokogiri::XML::Builder.new encoding: "UTF-8" do |xml|
-						yield xml
-					end.to_xml
-					puts content.cyan
-					response.body = [content]
-					response["Content-Type"] = 'text/xml; charset=utf-8'
-					response["Content-Length"] = content.bytesize.to_s
-				end
-
 				# Renders a multi-status XML response
 				def multistatus
-					render_xml do |xml|
+					_xml_render do |xml|
 						xml.multistatus 'xmlns' => 'DAV:' do
 							yield xml
 						end
