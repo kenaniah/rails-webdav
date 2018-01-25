@@ -1,20 +1,7 @@
 module Rails
 	module WebDAV
 		module Controller
-
-			# module ClassMethods
-			# end
-
 			module InstanceMethods
-
-				# Defines a request handler
-				def webdav
-					begin
-						self.send :"webdav_#{request.request_method.downcase}"
-					rescue ::Rack::HTTP::Status::Status => status
-						response.status = status.to_i
-					end
-				end
 
 			protected
 
@@ -25,11 +12,6 @@ module Rails
 					else
 						Nokogiri::XML body, &:strict
 					end
-				end
-
-				# Traverses the XML document to find certain nodes
-				def request_match pattern
-					request_document.xpath pattern, 'd' => 'DAV:'
 				end
 
 				# Returns a list of all property nodes
@@ -60,7 +42,7 @@ module Rails
 				# Renders a multi-status XML response
 				def multistatus
 					render_xml do |xml|
-						xml['DAV'].multistatus 'xmlns:DAV' => 'DAV:' do
+						xml.multistatus 'xmlns' => 'DAV:' do
 							yield xml
 						end
 					end
@@ -109,12 +91,12 @@ module Rails
 				def rexml_convert xml, element
 					if element.elements.empty?
 						if element.text
-							xml['DAV'].send element.name.to_sym, element.text, element.attributes
+							xml.send element.name.to_sym, element.text, element.attributes
 						else
-							xml['DAV'].send element.name.to_sym, element.attributes
+							xml.send element.name.to_sym, element.attributes
 						end
 					else
-						xml['DAV'].send element.name.to_sym, element.attributes do
+						xml.send element.name.to_sym, element.attributes do
 							element.elements.each do |child|
 								rexml_convert xml, child
 							end
@@ -123,7 +105,6 @@ module Rails
 				end
 
 			end
-
 		end
 	end
 end

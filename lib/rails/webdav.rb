@@ -1,5 +1,5 @@
 require "rack/http/status"
-require "rails/webdav/controller"
+require "rails/webdav/controller/instance_methods"
 require "rails/webdav/controller/webdav_methods"
 require "rails/webdav/controller/xml_helpers"
 require "rails/webdav/routing_helpers"
@@ -18,7 +18,7 @@ module Rails
 				include Controller::XMLHelpers
 				#extend Controller::ClassMethods
 
-				# Circumvent controller rendering
+				# Bypass controller rendering
 				around_action :webdav do
 					yield
 				end

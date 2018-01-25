@@ -3,14 +3,23 @@ module Rails
 		module Controller
 			module WebDAVMethods
 
+				# Defines a request handler
+				def webdav
+					begin
+						self.send :"webdav_#{request.request_method.downcase}"
+					rescue ::Rack::HTTP::Status::Status => status
+						response.status = status.to_i
+					end
+				end
+
 				# Defines the PROPFIND method
 				def webdav_propfind
 
 					puts request.body.read.green
 
 					# Determine what nodes to return
-					if request_match("/d:propfind/d:allprop").empty?
-						nodes = request_match "/d:propfind/d:prop/*"
+					if _xml_request_match("/d:propfind/d:allprop").empty?
+						nodes = _xml_request_match "/d:propfind/d:prop/*"
 						nodes = all_prop_nodes if nodes.empty?
 					else
 						nodes = all_prop_nodes
@@ -36,8 +45,8 @@ module Rails
 					# Return a collection
 					multistatus do |xml|
 						self.index.each do |name, resource|
-							xml['DAV'].response do
-								xml['DAV'].href resource.path
+							xml.response do
+								xml.href resource.path
 								propstats xml, get_properties(resource, nodes)
 							end
 						end
