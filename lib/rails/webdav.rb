@@ -1,4 +1,5 @@
 require "rack/http/status"
+require "rails/webdav/controller/class_methods"
 require "rails/webdav/controller/instance_methods"
 require "rails/webdav/controller/webdav_methods"
 require "rails/webdav/controller/xml_helpers"
@@ -10,13 +11,14 @@ module Rails
 
 		# Returns a new controller based on an existing controller
 		def self.Controller base = nil
+
 			Class.new(base || ActionController::Base) do
 
 				# Adds controller methods
 				include Controller::InstanceMethods
 				include Controller::WebDAVMethods
 				include Controller::XMLHelpers
-				#extend Controller::ClassMethods
+				extend Controller::ClassMethods
 
 				# Bypass controller rendering
 				around_action :webdav do
