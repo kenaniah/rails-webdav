@@ -10,9 +10,11 @@ module Rails
 
 				with_scope_level @scope[:options][:routing_mode] do
 
+					routing_mode = @scope[:options].delete :routing_mode
+					klass = routing_mode == :resources ? ActionDispatch::Routing::Mapper::Resources::Resource : ActionDispatch::Routing::Mapper::Resources::SingletonResource
+
 					options = apply_action_options options
-					options.delete :routing_mode
-					resource_scope(ActionDispatch::Routing::Mapper::Resources::Resource.new(resources.pop, api_only?, @scope[:shallow], options)) do
+					resource_scope(klass.new(resources.pop, api_only?, @scope[:shallow], options)) do
 
 						yield if block_given?
 
@@ -24,7 +26,7 @@ module Rails
 							end
 						end
 
-						if @scope[:options][:routing_mode] == :resources
+						if routing_mode == :resources
 							member do
 								[:propfind, :options, :head, :get].each do |m|
 									match "", action: :webdav, via: m
