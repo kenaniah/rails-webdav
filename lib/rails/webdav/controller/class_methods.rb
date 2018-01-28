@@ -11,7 +11,16 @@ module Rails
 
 			module ClassMethods
 
-				attr_reader :webdav_controller_mode
+				def inherited child
+					child.instance_variable_set :@webdav_controller_mode, @webdav_controller_mode
+					super
+				end
+
+				# Define a convenient accessor
+				def webdav_controller_mode *args
+					return self.webdav_controller_mode = args[0] if args.count == 1
+					@webdav_controller_mode
+				end
 
 				# Sets the controller's mode of behavior for routing purposes
 				def webdav_controller_mode= val
