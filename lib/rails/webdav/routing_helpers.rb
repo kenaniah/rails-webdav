@@ -14,6 +14,7 @@ module Rails
 					klass = routing_mode == :resources ? ActionDispatch::Routing::Mapper::Resources::Resource : ActionDispatch::Routing::Mapper::Resources::SingletonResource
 
 					options = apply_action_options options
+					options[:controller] ||= resources.first
 					resource_scope(klass.new(resources.pop, api_only?, @scope[:shallow], options)) do
 
 						yield if block_given?
